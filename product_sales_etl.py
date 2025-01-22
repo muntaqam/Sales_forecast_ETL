@@ -131,7 +131,7 @@ if not invalid_items.empty:
     # Drop the helper column
     data.drop(columns=['Most_Common_Item'], inplace=True)
 
-    # Check if any rows were updated
+    # Check if any rows were updated --
     updated_items = data[~data['Valid_Item']]
     print("Updated Items:")
     print(updated_items[['Transaction ID', 'Category', 'Price Per Unit', 'Item']])
