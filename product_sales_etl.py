@@ -253,6 +253,11 @@ scaler = StandardScaler()
 data[['Price Per Unit', 'Quantity']] = scaler.fit_transform(data[['Price Per Unit', 'Quantity']])
 
 
+preprocessed_file_name = "preprocessed_retail_store_sales.csv"
+data.to_csv(preprocessed_file_name, index=False)
+print(f"Preprocessed data has been saved to {preprocessed_file_name}.")
+
+
 #split the data 
 # Define X (features) and y (target)
 X = data.drop(columns=['Total Spent', 'Transaction ID', 'Customer ID', 'Transaction Date'])
@@ -280,4 +285,34 @@ print(f"Mean Squared Error: {mse}")
 print(f"R² Score: {r2}")
 
 
+
+target_variance = y.var()
+print("----------------------------------")
+print(f"Target Variance: {target_variance}")
+
+
+
+
+# Predict future sales for each row
+X_test = data.drop(columns=['Total Spent', 'Transaction ID', 'Customer ID', 'Transaction Date'])
+predicted_sales = model.predict(X_test)
+
+# Add predictions to the dataset
+data['Predicted Total Spent'] = predicted_sales
+
+# Reconstruct the original 'Item' column from one-hot encoded columns
+item_columns = [col for col in data.columns if col.startswith('Item_')]
+data['Reconstructed_Item'] = data[item_columns].idxmax(axis=1)
+
+# Aggregate predictions by reconstructed 'Item'
+future_performance = data.groupby('Reconstructed_Item').agg({
+    'Predicted Total Spent': 'sum'
+}).reset_index()
+
+# Sort by predicted total revenue
+# Display the top-performing items with "Predicted Revenue" in the output
+future_performance.rename(columns={'Predicted Total Spent': 'Predicted Revenue'}, inplace=True)
+
+print("Top predicted products for the upcoming year:")
+print(future_performance.head(10))
 
