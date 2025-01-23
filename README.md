@@ -22,7 +22,7 @@ This project is structured to follow a data engineering and machine learning pip
 - Evaluate the model's performance using metrics like RMSE or R².
 
 ### 2. **Data Acquisition**
-- Dataset Source: [Kaggle](https://www.kaggle.com)
+- Dataset Source: [Kaggle](https://www.kaggle.com/datasets/ahmedmohamed2003/retail-store-sales-dirty-for-data-cleaning)
 - Example Data Fields:
   - `Transaction ID`
   - `Customer ID`
