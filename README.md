@@ -2,7 +2,7 @@
 # Sales Forecasting Project
 
 ## **Objective**
-The primary goal of this project is to predict which products will perform better in the upcoming year based on historical sales data. The project involves cleaning and preprocessing raw data, building an ETL pipeline, and developing a machine learning model to forecast product performance.
+The primary goal of this project is to identify products that are predicted to generate the highest revenue based on their current features and characteristics. The project involves cleaning and preprocessing raw data, building an ETL pipeline, and developing a machine learning model to estimate product performance.
 
 ---
 
@@ -90,7 +90,6 @@ This project is structured to follow a data engineering and machine learning pip
    ```
 
 ---
-
 ## **Outputs**
 1. **Cleaned Dataset**:
    - Transformed sales data stored in AWS S3 under the `transformed/` folder.
@@ -98,8 +97,24 @@ This project is structured to follow a data engineering and machine learning pip
    - A model trained to forecast product performance.
 3. **Predictions**:
    - Forecasted sales data for the upcoming year.
-4. **Visualizations**:
-   - Charts and graphs illustrating trends and predictions.
+   - **Top Predicted Products**:
+   
+     | Reconstructed_Item  | Predicted Revenue |
+     |---------------------|-------------------|
+     | Item_Item_25_FUR    | 24715.45          |
+     | Item_Item_25_EHE    | 23073.85          |
+     | Item_Item_25_BUT    | 22244.72          |
+     | Item_Item_24_FUR    | 20758.97          |
+     | Item_Item_25_FOOD   | 20270.84          |
+     | Item_Item_22_BUT    | 19938.79          |
+     | Item_Item_23_BUT    | 19286.40          |
+     | Item_Item_19_MILK   | 18953.87          |
+     | Item_Item_20_BUT    | 18836.56          |
+     | Item_Item_23_PAT    | 18439.58          |
+
+4. **Model Performance**:
+   - **Mean Squared Error (MSE)**: 961.23
+   - **R² Score**: 0.89
 
 ---
 
