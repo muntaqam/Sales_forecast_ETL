@@ -40,9 +40,9 @@ This project is structured to follow a data engineering and machine learning pip
   - Validate fields like Transaction ID, Customer ID, and Prices.
   - Handle missing or invalid values.
   - Engineer features like seasonal trends and price-per-unit.
-- **Load**: Save the cleaned data back into S3.
+- **Load**:  Save the cleaned data back into S3 under the transformed/ and preprocessed/ folders.
 
-### 4. **Machine Learning** --in progress
+### 4. **Machine Learning** 
 - Train a predictive model using algorithms such as Linear Regression or XGBoost.
 - Evaluate the model using validation techniques and refine it based on metrics.
 
