@@ -258,6 +258,12 @@ data.to_csv(preprocessed_file_name, index=False)
 print(f"Preprocessed data has been saved to {preprocessed_file_name}.")
 
 
+upload_key = f"preprocessed/{preprocessed_file_name}"
+s3.upload_file(preprocessed_file_name, bucket_name, upload_key)
+print(f"File uploaded to S3 bucket '{bucket_name}' under '{upload_key}'")
+
+
+
 #split the data 
 # Define X (features) and y (target)
 X = data.drop(columns=['Total Spent', 'Transaction ID', 'Customer ID', 'Transaction Date'])
