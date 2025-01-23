@@ -3,9 +3,15 @@ import os
 import boto3
 import pandas as pd
 import re
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+
 
 # ----------------- Helper Functions ----------------- #
-
 def validate_column(data, column_name, pattern, description):
     """
     Validate a column based on a regex pattern.
@@ -94,6 +100,7 @@ invalid_dates = data[data['Transaction Date'].isnull()]
 if not invalid_dates.empty:
     print("Invalid Transaction Dates detected:")
     print(invalid_dates)
+    data = data.dropna(subset=['Transaction Date'])
 
 # 8. Validate Discount Applied
 invalid_discounts = data[~data['Discount Applied'].isin([True, False]) & data['Discount Applied'].notnull()]
@@ -140,6 +147,52 @@ else:
     print("All Items are valid.")
 
 
+# Infer 'Discount Applied'
+expected_total = data['Price Per Unit'] * data['Quantity']
+data['Discount Applied'] = data['Discount Applied'].fillna(data['Total Spent'] < expected_total)
+
+# Infer 'Item'
+grouped_modes = (
+    data.groupby(['Category', 'Price Per Unit'])['Item']
+    .agg(lambda x: x.mode()[0] if not x.mode().empty else None)
+    .reset_index()
+    .rename(columns={'Item': 'Most_Common_Item'})
+)
+data = data.merge(grouped_modes, on=['Category', 'Price Per Unit'], how='left')
+data['Item'] = data['Item'].fillna(data['Most_Common_Item'])
+data.drop(columns=['Most_Common_Item'], inplace=True)
+
+# Infer 'Price Per Unit'
+data['Price Per Unit'] = data.groupby('Category')['Price Per Unit'].transform(
+    lambda x: x.fillna(x.mean())
+)
+
+# Infer 'Quantity' and 'Total Spent' using context
+data['Quantity'] = data['Quantity'].fillna(data['Total Spent'] / data['Price Per Unit'])
+data['Total Spent'] = data['Total Spent'].fillna(data['Price Per Unit'] * data['Quantity'])
+
+# Infer 'Item' using grouped modes
+grouped_modes = (
+    data.groupby(['Category', 'Price Per Unit'])['Item']
+    .agg(lambda x: x.mode()[0] if not x.mode().empty else None)
+    .reset_index()
+    .rename(columns={'Item': 'Most_Common_Item'})
+)
+data = data.merge(grouped_modes, on=['Category', 'Price Per Unit'], how='left')
+data['Item'] = data['Item'].fillna(data['Most_Common_Item'])
+data.drop(columns=['Most_Common_Item'], inplace=True)
+
+# Confirm no missing values remain
+print("Remaining missing values after imputation:")
+print(data.isnull().sum())
+
+# Drop all rows with any remaining NaN values
+data = data.dropna()
+
+# Confirm no missing values remain
+print("Remaining missing values after dropping rows:")
+print(data.isnull().sum())
+
 
 # ----------------- Summary ----------------- #
 
@@ -156,3 +209,75 @@ upload_key = f"transformed/{transformed_file_name}"
 
 s3.upload_file(transformed_file_name, bucket_name, upload_key)
 print(f"File uploaded to S3 bucket '{bucket_name}' under '{upload_key}'")
+
+
+#---------- generate report for missing data --------
+def generate_missing_values_report(data):
+    """
+    Generate a report of missing (NaN) values in the dataset.
+    """
+    total = data.isnull().sum()
+    percent = (data.isnull().sum() / len(data)) * 100
+    missing_report = pd.DataFrame({
+        'Total Missing': total,
+        'Percent Missing (%)': percent
+    })
+    return missing_report[missing_report['Total Missing'] > 0].sort_values(by='Total Missing', ascending=False)
+
+# Generate and display the report
+missing_report = generate_missing_values_report(data)
+print("Missing Values Report:")
+print(missing_report)
+
+
+
+# time to create the machine learning model
+
+
+# ------------ Pre processing -----------------
+# One hot encoding
+data = pd.read_csv("transformed_retail_store_sales.csv")
+# print(data.head())
+data = pd.get_dummies(data, columns=['Category', 'Item', 'Payment Method', 'Location'], drop_first=True)
+
+# #breaking up data for more features
+# print("----------checking date type -------------")
+# print(data['Transaction Date'].dtype)
+# print("----------------------------------------------")
+# data['Year'] = data['Transaction Date'].dt.year
+# data['Month'] = data['Transaction Date'].dt.month
+
+
+#scale and normalize so that data so model does not assume the wrong weight to values
+scaler = StandardScaler()
+data[['Price Per Unit', 'Quantity']] = scaler.fit_transform(data[['Price Per Unit', 'Quantity']])
+
+
+#split the data 
+# Define X (features) and y (target)
+X = data.drop(columns=['Total Spent', 'Transaction ID', 'Customer ID', 'Transaction Date'])
+y = data['Total Spent']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+#-------------- Train data ------------
+
+# Initialize and train the model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+
+# ------------- Predict ------------
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse}")
+print(f"R² Score: {r2}")
+
+
+
