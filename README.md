@@ -17,7 +17,7 @@ This project is structured to follow a data engineering and machine learning pip
 ---
 
 ## **Workflow Steps**
-### 1. **Define the Goal**
+### 1. **Goal**
 - Predict product sales for the upcoming year using historical sales data.
 - Evaluate the model's performance using metrics like RMSE or R².
 
